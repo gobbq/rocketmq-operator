@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"os/exec"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -185,6 +186,9 @@ func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha
 		return reconcile.Result{Requeue: true}, err
 	}
 	hostIps := getNameServers(podList.Items)
+
+	sort.Strings(hostIps)
+	sort.Strings(instance.Status.NameServers)
 
 	// Update status.NameServers if needed
 	if !reflect.DeepEqual(hostIps, instance.Status.NameServers) {
@@ -357,13 +361,14 @@ func (r *ReconcileNameService) statefulSetForNameService(nameService *rocketmqv1
 					Labels: ls,
 				},
 				Spec: corev1.PodSpec{
-					Affinity:          nameService.Spec.Affinity,
-					Tolerations:       nameService.Spec.Tolerations,
-					NodeSelector:      nameService.Spec.NodeSelector,
-					PriorityClassName: nameService.Spec.PriorityClassName,
-					HostNetwork:       nameService.Spec.HostNetwork,
-					DNSPolicy:         nameService.Spec.DNSPolicy,
-					ImagePullSecrets:  nameService.Spec.ImagePullSecrets,
+					ServiceAccountName: nameService.Spec.ServiceAccountName,
+					Affinity:           nameService.Spec.Affinity,
+					Tolerations:        nameService.Spec.Tolerations,
+					NodeSelector:       nameService.Spec.NodeSelector,
+					PriorityClassName:  nameService.Spec.PriorityClassName,
+					HostNetwork:        nameService.Spec.HostNetwork,
+					DNSPolicy:          nameService.Spec.DNSPolicy,
+					ImagePullSecrets:   nameService.Spec.ImagePullSecrets,
 					Containers: []corev1.Container{{
 						Resources: nameService.Spec.Resources,
 						Image:     nameService.Spec.NameServiceImage,

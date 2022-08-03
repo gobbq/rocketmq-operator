@@ -40,6 +40,8 @@ type BrokerSpec struct {
 	BrokerImage string `json:"brokerImage"`
 	// ImagePullPolicy defines how the image is pulled
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy"`
+	// HostNetwork can be true or false
+	HostNetwork bool `json:"hostNetwork,omitempty"`
 	// AllowRestart defines whether allow pod restart
 	AllowRestart bool `json:"allowRestart"`
 	// Resources describes the compute resource requirements
@@ -70,6 +72,8 @@ type BrokerSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// PriorityClassName indicates the pod's priority
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// ServiceAccountName
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // BrokerStatus defines the observed state of Broker

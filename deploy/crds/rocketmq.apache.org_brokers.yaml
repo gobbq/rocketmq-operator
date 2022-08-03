@@ -49,6 +49,9 @@ spec:
           spec:
             description: BrokerSpec defines the desired state of Broker
             properties:
+              ServiceAccountName:
+                description: ServiceAccountName
+                type: string
               affinity:
                 description: Affinity the pod's scheduling constraints
                 properties:
@@ -1134,6 +1137,9 @@ spec:
                   - name
                   type: object
                 type: array
+              hostNetwork:
+                description: HostNetwork can be true or false
+                type: boolean
               hostPath:
                 description: HostPath is the local path to store data
                 type: string
