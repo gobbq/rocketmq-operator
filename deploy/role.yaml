@@ -172,6 +172,18 @@ rules:
 - apiGroups:
   - rocketmq.apache.org
   resources:
+  - rocketmqs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rocketmq.apache.org
+  resources:
   - topictransfers
   verbs:
   - create

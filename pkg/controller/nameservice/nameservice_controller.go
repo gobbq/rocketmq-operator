@@ -20,6 +20,7 @@ package nameservice
 
 import (
 	"context"
+	"github.com/apache/rocketmq-operator/pkg/share"
 	"github.com/google/uuid"
 	"os/exec"
 	"reflect"
@@ -29,7 +30,6 @@ import (
 
 	rocketmqv1alpha1 "github.com/apache/rocketmq-operator/pkg/apis/rocketmq/v1alpha1"
 	cons "github.com/apache/rocketmq-operator/pkg/constants"
-	"github.com/apache/rocketmq-operator/pkg/share"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -131,6 +131,11 @@ func (r *ReconcileNameService) Reconcile(ctx context.Context, request reconcile.
 		return reconcile.Result{}, err
 	}
 
+	rocketmqName, ok := instance.ObjectMeta.Annotations[cons.RocketMQNameAnnotation]
+	if !ok {
+		return reconcile.Result{}, nil
+	}
+
 	// Check if the statefulSet already exists, if not create a new one
 	found := &appsv1.StatefulSet{}
 
@@ -159,10 +164,12 @@ func (r *ReconcileNameService) Reconcile(ctx context.Context, request reconcile.
 		}
 	}
 
-	return r.updateNameServiceStatus(instance, request, true)
+	config := share.GetShareConfig(rocketmqName)
+	reqLogger.Info("config", "config", config)
+	return r.updateNameServiceStatus(instance, request, config, true)
 }
 
-func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha1.NameService, request reconcile.Request, requeue bool) (reconcile.Result, error) {
+func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha1.NameService, request reconcile.Request, config *share.ClusterShareConfig, requeue bool) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Check the NameServers status")
 	// List the pods for this nameService's statefulSet
@@ -190,14 +197,14 @@ func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha
 		for _, value := range hostIps {
 			nameServerListStr = nameServerListStr + value + ":9876;"
 		}
-		share.NameServersStr = nameServerListStr[:len(nameServerListStr)-1]
-		reqLogger.Info("share.NameServersStr:" + share.NameServersStr)
+		config.NameServersStr = nameServerListStr[:len(nameServerListStr)-1]
+		reqLogger.Info("share.NameServersStr:" + config.NameServersStr)
 
 		if len(oldNameServerListStr) <= cons.MinIpListLength {
-			oldNameServerListStr = share.NameServersStr
-		} else if len(share.NameServersStr) > cons.MinIpListLength {
+			oldNameServerListStr = config.NameServersStr
+		} else if len(config.NameServersStr) > cons.MinIpListLength {
 			oldNameServerListStr = oldNameServerListStr[:len(oldNameServerListStr)-1]
-			share.IsNameServersStrUpdated = true
+			config.IsNameServersStrUpdated = true
 		}
 		reqLogger.Info("oldNameServerListStr:" + oldNameServerListStr)
 
@@ -211,17 +218,17 @@ func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha
 		}
 
 		// use admin tool to update broker config
-		if share.IsNameServersStrUpdated && (len(oldNameServerListStr) > cons.MinIpListLength) && (len(share.NameServersStr) > cons.MinIpListLength) {
+		if config.IsNameServersStrUpdated && (len(oldNameServerListStr) > cons.MinIpListLength) && (len(config.NameServersStr) > cons.MinIpListLength) {
 			mqAdmin := cons.AdminToolDir
 			subCmd := cons.UpdateBrokerConfig
 			key := cons.ParamNameServiceAddress
 
-			reqLogger.Info("share.GroupNum=broker.Spec.Size=" + strconv.Itoa(share.GroupNum))
+			reqLogger.Info("share.GroupNum=broker.Spec.Size=" + strconv.Itoa(config.GroupNum))
 
-			clusterName := share.BrokerClusterName
+			clusterName := config.BrokerClusterName
 			reqLogger.Info("Updating config " + key + " of cluster" + clusterName)
-			command := mqAdmin + " " + subCmd + " -c " + clusterName + " -k " + key + " -n " + oldNameServerListStr + " -v " + share.NameServersStr
-			cmd := exec.Command("sh", mqAdmin, subCmd, "-c", clusterName, "-k", key, "-n", oldNameServerListStr, "-v", share.NameServersStr)
+			command := mqAdmin + " " + subCmd + " -c " + clusterName + " -k " + key + " -n " + oldNameServerListStr + " -v " + config.NameServersStr
+			cmd := exec.Command("sh", mqAdmin, subCmd, "-c", clusterName, "-k", key, "-n", oldNameServerListStr, "-v", config.NameServersStr)
 			output, err := cmd.Output()
 			if err != nil {
 				reqLogger.Error(err, "Update Broker config "+key+" failed of cluster "+clusterName+", command: "+command)
@@ -238,7 +245,7 @@ func (r *ReconcileNameService) updateNameServiceStatus(instance *rocketmqv1alpha
 
 	runningNameServerNum := getRunningNameServersNum(podList.Items)
 	if runningNameServerNum == instance.Spec.Size {
-		share.IsNameServersStrInitialized = true
+		config.IsNameServersStrInitialized = true
 	}
 
 	if requeue {

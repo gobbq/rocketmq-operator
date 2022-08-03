@@ -147,4 +147,6 @@ const (
 
 	// TopicListConsumerGroup is the consumer group field index of the output when using command check topic list
 	TopicListConsumerGroup = 2
+
+	RocketMQNameAnnotation = "rocketmq-name.rocketmq.apache.org"
 )

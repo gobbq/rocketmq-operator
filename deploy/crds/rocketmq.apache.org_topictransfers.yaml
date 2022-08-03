@@ -36,6 +36,9 @@ spec:
           spec:
             description: TopicTransferSpec defines the desired state of TopicTransfer
             properties:
+              rocketmqName:
+                description: RocketMQName RocketMQ resource name
+                type: string
               sourceCluster:
                 description: The cluster where the transferred topic from
                 type: string

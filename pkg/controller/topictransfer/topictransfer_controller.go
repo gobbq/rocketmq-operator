@@ -20,6 +20,7 @@ package topictransfer
 
 import (
 	"context"
+	"github.com/apache/rocketmq-operator/pkg/share"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -27,7 +28,6 @@ import (
 
 	rocketmqv1alpha1 "github.com/apache/rocketmq-operator/pkg/apis/rocketmq/v1alpha1"
 	cons "github.com/apache/rocketmq-operator/pkg/constants"
-	"github.com/apache/rocketmq-operator/pkg/share"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -127,8 +127,10 @@ func (r *ReconcileTopicTransfer) Reconcile(ctx context.Context, request reconcil
 	topic := topicTransfer.Spec.Topic
 	targetCluster := topicTransfer.Spec.TargetCluster
 	sourceCluster := topicTransfer.Spec.SourceCluster
+	rocketmqName := topicTransfer.Spec.RocketMQName
+	config := share.GetShareConfig(rocketmqName)
 
-	nameServer := strings.Split(share.NameServersStr, ";")[0]
+	nameServer := strings.Split(config.NameServersStr, ";")[0]
 	if len(nameServer) < cons.MinIpListLength {
 		reqLogger.Info("There is no available name server now thus the topic transfer process is terminated.")
 		// terminate the transfer process

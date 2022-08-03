@@ -31,6 +31,8 @@ type TopicTransferSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
+	// RocketMQName RocketMQ resource name
+	RocketMQName string `json:"rocketmqName,omitempty"`
 	// Topic name
 	Topic string `json:"topic,omitempty"`
 	// The cluster where the transferred topic from

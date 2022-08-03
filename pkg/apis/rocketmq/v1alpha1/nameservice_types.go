@@ -91,6 +91,11 @@ type NameService struct {
 	Status NameServiceStatus `json:"status,omitempty"`
 }
 
+func (in *NameService) Ready() bool {
+	servers := in.Status.NameServers
+	return servers != nil && len(servers) == int(in.Spec.Size)
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NameServiceList contains a list of NameService

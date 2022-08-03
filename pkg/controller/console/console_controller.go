@@ -124,10 +124,16 @@ func (r *ReconcileConsole) Reconcile(ctx context.Context, request reconcile.Requ
 		return reconcile.Result{}, err
 	}
 
+	rocketmqName, ok := instance.ObjectMeta.Annotations[cons.RocketMQNameAnnotation]
+	if !ok {
+		return reconcile.Result{}, nil
+	}
+	config := share.GetShareConfig(rocketmqName)
+
 	if instance.Spec.NameServers == "" {
 		// wait for name server ready if nameServers is omitted
 		for {
-			if share.IsNameServersStrInitialized {
+			if config.IsNameServersStrInitialized {
 				break
 			} else {
 				log.Info("Waiting for name server ready...")
@@ -135,10 +141,10 @@ func (r *ReconcileConsole) Reconcile(ctx context.Context, request reconcile.Requ
 			}
 		}
 	} else {
-		share.NameServersStr = instance.Spec.NameServers
+		config.NameServersStr = instance.Spec.NameServers
 	}
 
-	consoleDeployment := newDeploymentForCR(instance)
+	consoleDeployment := newDeploymentForCR(instance, config)
 
 	// Set Console instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, consoleDeployment, r.scheme); err != nil {
@@ -161,6 +167,17 @@ func (r *ReconcileConsole) Reconcile(ctx context.Context, request reconcile.Requ
 		return reconcile.Result{}, err
 	}
 
+	// Update console status
+	if found.Status.ReadyReplicas != instance.Status.ReadyReplicas {
+		instance.Status.ReadyReplicas = found.Status.ReadyReplicas
+		err = r.client.Status().Update(ctx, instance)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update console status ", "Namespace", found.Namespace, "Name", found.Name)
+		} else {
+			reqLogger.Info("Successfully updated console status ", "Namespace", found.Namespace, "Name", found.Name)
+		}
+	}
+
 	// Support console deployment scaling
 	if !reflect.DeepEqual(instance.Spec.ConsoleDeployment.Spec.Replicas, found.Spec.Replicas) {
 		found.Spec.Replicas = instance.Spec.ConsoleDeployment.Spec.Replicas
@@ -180,10 +197,10 @@ func (r *ReconcileConsole) Reconcile(ctx context.Context, request reconcile.Requ
 }
 
 // newDeploymentForCR returns a deployment pod with modifying the ENV
-func newDeploymentForCR(cr *rocketmqv1alpha1.Console) *appsv1.Deployment {
+func newDeploymentForCR(cr *rocketmqv1alpha1.Console, config *share.ClusterShareConfig) *appsv1.Deployment {
 	env := corev1.EnvVar{
 		Name:  "JAVA_OPTS",
-		Value: fmt.Sprintf("-Drocketmq.namesrv.addr=%s -Dcom.rocketmq.sendMessageWithVIPChannel=false", share.NameServersStr),
+		Value: fmt.Sprintf("-Drocketmq.namesrv.addr=%s -Dcom.rocketmq.sendMessageWithVIPChannel=false", config.NameServersStr),
 	}
 
 	dep := &appsv1.Deployment{

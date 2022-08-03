@@ -18,19 +18,40 @@
 // Package share defines some variables shared by different packages
 package share
 
-var (
+type ClusterShareConfig struct {
 	// GroupNum is the number of broker group
-	GroupNum = 0
+	GroupNum int
 
 	// NameServersStr is the name server list
-	NameServersStr = ""
+	NameServersStr string
 
 	// IsNameServersStrUpdated is whether the name server list is updated
-	IsNameServersStrUpdated = false
+	IsNameServersStrUpdated bool
 
 	// IsNameServersStrInitialized is whether the name server list is initialized
-	IsNameServersStrInitialized = false
+	IsNameServersStrInitialized bool
 
 	// BrokerClusterName is the broker cluster name
-	BrokerClusterName = ""
-)
+	BrokerClusterName string
+}
+
+var shareConfigs map[string]*ClusterShareConfig
+
+func GetShareConfig(clusterName string) *ClusterShareConfig {
+	if shareConfigs == nil {
+		shareConfigs = make(map[string]*ClusterShareConfig)
+	}
+	if config, ok := shareConfigs[clusterName]; ok {
+		return config
+	}
+
+	config := ClusterShareConfig{
+		GroupNum:                    0,
+		NameServersStr:              "",
+		IsNameServersStrUpdated:     false,
+		IsNameServersStrInitialized: false,
+		BrokerClusterName:           "",
+	}
+	shareConfigs[clusterName] = &config
+	return &config
+}
