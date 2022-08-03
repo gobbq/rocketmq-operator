@@ -1343,6 +1343,9 @@ spec:
                                 - name
                                 type: object
                               type: array
+                            hostNetwork:
+                              description: HostNetwork can be true or false
+                              type: boolean
                             hostPath:
                               description: HostPath is the local path to store data
                               type: string
@@ -1588,6 +1591,9 @@ spec:
                                       type: string
                                   type: object
                               type: object
+                            serviceAccountName:
+                              description: ServiceAccountName
+                              type: string
                             size:
                               description: 'INSERT ADDITIONAL SPEC FIELDS - desired
                                 state of cluster Important: Run "operator-sdk generate
@@ -4883,6 +4889,9 @@ spec:
                           - name
                           type: object
                         type: array
+                      hostNetwork:
+                        description: HostNetwork can be true or false
+                        type: boolean
                       hostPath:
                         description: HostPath is the local path to store data
                         type: string
@@ -5117,6 +5126,9 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        description: ServiceAccountName
+                        type: string
                       size:
                         description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
                           of cluster Important: Run "operator-sdk generate k8s" to
@@ -17351,6 +17363,9 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        description: ServiceAccountName
+                        type: string
                       size:
                         description: 'INSERT ADDITIONAL SPEC FIELDS - desired state
                           of cluster Important: Run "operator-sdk generate k8s" to

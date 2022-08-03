@@ -90,6 +90,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 }
 
 //+kubebuilder:rbac:groups=rocketmq.apache.org,resources=rocketmqs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=rocketmq.apache.org,resources=rocketmqs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=rocketmq.apache.org,resources=rocketmqs/finalizers,verbs=update
 //+kubebuilder:rbac:groups=rocketmq.apache.org,resources=nameservices,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=rocketmq.apache.org,resources=brokers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=rocketmq.apache.org,resources=consoles,verbs=get;list;watch;create;update;patch;delete
